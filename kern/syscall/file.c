@@ -33,3 +33,7 @@ int sys_open(userptr_t path, int flags, mode_t mode, int_32_t *retval){
 
     return 0;
 }
+
+int sys_write(int fd, char *buf, size_t size){
+    return 0;
+}
