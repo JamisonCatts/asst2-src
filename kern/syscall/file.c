@@ -19,7 +19,7 @@
  * Add your file-related functions here ...
  */
 
-int sys_open(userptr_t path, int flags, mode_t mode, int_32_t *retval){
+int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval){
 
     char path_name[PATH_MAX];
 
@@ -29,11 +29,17 @@ int sys_open(userptr_t path, int flags, mode_t mode, int_32_t *retval){
     kprintf("path is %s\n", path_name);
     kprintf("flags is %d\n", flags);
     kprintf("mode is %d\n", mode);
-
+    *retval = 0;
 
     return 0;
 }
 
 int sys_write(int fd, char *buf, size_t size){
+
+    kernel_buf[size];
+
+    
+
+
     return 0;
 }
