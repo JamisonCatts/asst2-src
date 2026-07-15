@@ -60,7 +60,7 @@ int sys_reboot(int code);
 int sys___time(userptr_t user_seconds, userptr_t user_nanoseconds);
 
 // TODO: add arguments
-int sys_open();
+int sys_open(userptr_t path, int flags, mode_t mode, int_32_t *retval);
 int sys_close();
 int sys_read();
 int sys_write();
