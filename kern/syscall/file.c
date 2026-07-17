@@ -149,7 +149,7 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
     struct iovec iov;
     uio_init(&iov, &u, buf, size, this_file->offset, UIO_WRITE);
     lock_acquire(this_file->lock);
-        result = VOP_WRITE(this_file->vn, u);
+        result = VOP_WRITE(this_file->vn, &u);
     lock_release(this_file->lock);
 
 
