@@ -24,7 +24,8 @@ struct file {
     struct lock *lock;
 };
 
-
+void uio_init(struct iovec *iov, struct uio *u, userptr_t buf, size_t len, off_t offset, enum uio_rw rw);
+void init_file(struct file *new_file, struct vnode *vn, int flags, char *path_name);
 
 
 

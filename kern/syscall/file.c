@@ -30,7 +30,8 @@ void init_file(struct file *new_file, struct vnode *vn, int flags, char *path_na
 }
 
 // This uses the userptr and not the kernel buf idk
-void uio_init(struct iovec *iov, struct uio *u, userptr_t buf, size_t len, off_t offset, enum uio_rw rw){
+void uio_init(struct iovec *iov, struct uio *u, userptr_t buf, size_t len, off_t offset, enum uio_rw rw)
+{
     iov->iov_ubase = buf;
     iov->iov_len = len;
     u->uio_iov = iov;
@@ -146,7 +147,7 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
     }
     struct uio u;
     struct iovec iov;
-    uio_init(&iov, &u, buf, size, file->offset, UIO_WRITE);
+    uio_init(&iov, &u, buf, size, this_file->offset, UIO_WRITE);
     lock_acquire(this_file->lock);
         result = VOP_WRITE(this_file->vn, u);
     lock_release(this_file->lock);
@@ -157,7 +158,7 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
     if (result){
         return result;
     }
-    this_file->offset = u.offset;
+    this_file->offset = u.uio_offset;
     
     *ret_val = size - u.uio_resid;
     return 0;
