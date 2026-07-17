@@ -119,7 +119,7 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
 
     char kernel_buf[size];
     size_t got;
-    result = copyinstr(buf, &kernel_buf, size, &got);
+    result = copyinstr(buf, kernel_buf, size, &got);
 
 
     if (result)
