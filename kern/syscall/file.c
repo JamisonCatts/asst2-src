@@ -113,7 +113,7 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
 {
 
     // Assume there will be an error
-    *ret_val = -1;
+    // *ret_val = -1;
     if (fd < 0 || fd >= OPEN_MAX) {
         return EBADF;
     }
