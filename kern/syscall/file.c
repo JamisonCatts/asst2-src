@@ -70,7 +70,7 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
     {
         if (curproc->fd_table[i] == NULL)
         {
-            curr_proc->fd_table[i] = new_file;
+            curproc->fd_table[i] = new_file;
             fd = i;
             break;
         }
