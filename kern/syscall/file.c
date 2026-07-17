@@ -43,7 +43,7 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
         return result;
     }
 
-    kprintf("in sys_open() path is %s\n" kernel_path);
+    kprintf("in sys_open() path is %s\n", kernel_path);
 
     result = vfs_open(kernel_path, flags, mode, &vn);
 
