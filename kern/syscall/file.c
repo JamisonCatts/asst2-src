@@ -9,6 +9,7 @@
 #include <proc.h>
 #include <current.h>
 #include <synch.h>
+#include <spinlock.h>
 #include <vfs.h>
 #include <vnode.h>
 #include <file.h>
@@ -35,7 +36,7 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
     char kernel_path[PATH_MAX];
     struct vnode *vn;
     size_t got;
-    result = copyinstr(path, &kernel_path, PATH_MAX, &got);
+    result = copyinstr(path, kernel_path, PATH_MAX, &got);
 
     if (result)
     {
@@ -49,7 +50,7 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
         return result;
     }
 
-    new_file = kmalloc(sizeof(struct file));
+    struct file *new_file = kmalloc(sizeof(struct file));
 
     if (new_file == NULL)
     {
@@ -63,7 +64,7 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
         int fd;
 
     // acquire lock for current process
-    lock_acquire(curproc->p_lock);
+    spinlock_acquire(curproc->p_lock);
 
     for (int i = 3; i < OPEN_MAX; i++)
     {
@@ -74,7 +75,7 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
             break;
         }
     }
-    lock_release(curproc->p_lock);
+    spinlock_release(curproc->p_lock);
 
     // If can't open any more files
     if (i == OPEN_MAX)

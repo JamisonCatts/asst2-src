@@ -20,7 +20,7 @@ struct file {
     struct vnode *vn;
     off_t offset;
     int flags;
-    int refcount;
+    int ref_count;
     struct lock *lock;
 };
 
