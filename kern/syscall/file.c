@@ -65,8 +65,8 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
 
     // acquire lock for current process
     spinlock_acquire(&curproc->p_lock);
-
-    for (int i = 3; i < OPEN_MAX; i++)
+    int i;
+    for (i = 3; i < OPEN_MAX; i++)
     {
         if (curproc->fd_table[i] == NULL)
         {
