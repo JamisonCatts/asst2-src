@@ -165,6 +165,6 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
 }
 
 // TODO: destroy file in fd_table when refcount == 0
-int sys_close(){
+// int sys_close(){
 
-}
+// }
