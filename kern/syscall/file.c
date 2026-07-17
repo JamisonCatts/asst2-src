@@ -26,7 +26,7 @@ void init_file(struct file *newfile, struct vnode *vn, int flags, char *path_nam
     new_file->flags = flags;
     new_file->ref_count = 1;
     new_file->lock = lock_create(path_name);
-};
+}
 
 int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
 {
@@ -102,6 +102,8 @@ int sys_write(int fd, userptr_t buf, size_t size)
     {
         return result;
     }
+
+    (void)fd;
 
     return 0;
 }

@@ -25,6 +25,6 @@ struct file {
 };
 
 int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval);
-int sys_write(int fd, userptr_t buf, size_t size)
+int sys_write(int fd, userptr_t buf, size_t size);
 
 #endif /* _FILE_H_ */
