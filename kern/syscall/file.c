@@ -43,6 +43,8 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
         return result;
     }
 
+    kprintf("in sys_open() path is %s\n" kernel_path);
+
     result = vfs_open(kernel_path, flags, mode, &vn);
 
     if (result)
@@ -85,6 +87,8 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
         vfs_close(vn);
         return ENOMEM;
     }
+
+    kprintf("in sys_open() new fd is %d\n", fd);
 
     *retval = fd;
 
