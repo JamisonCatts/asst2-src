@@ -131,7 +131,7 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
     // Later deal with stdard FDs
 
     spinlock_acquire(&curproc->p_lock);
-    struct file *this_file = currproc->fd_table[fd];
+    struct file *this_file = curproc->fd_table[fd];
 
     
     if (this_file == NULL){
@@ -146,7 +146,7 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
     }
     struct uio u;
     struct iovec iov;
-    uio_init(&uiov, &u, buf, size, file->offset, UIO_WRITE);
+    uio_init(&iov, &u, buf, size, file->offset, UIO_WRITE);
     lock_acquire(this_file->lock);
         result = VOP_WRITE(this_file->vn, u);
     lock_release(this_file->lock);
