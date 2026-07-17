@@ -31,7 +31,7 @@ void init_file(struct file *new_file, struct vnode *vn, int flags, char *path_na
 
 // This uses the userptr and not the kernel buf idk
 void uio_init(struct iovec *iov, struct uio *u, userptr_t buf, size_t len, off_t offset, enum uio_rw rw){
-    iov->iov_base = buf;
+    iov->iov_ubase = buf;
     iov->iov_len = len;
     u->uio_iov = iov;
     u->uio_iovcnt = 1;
@@ -39,7 +39,7 @@ void uio_init(struct iovec *iov, struct uio *u, userptr_t buf, size_t len, off_t
     u->uio_resid = len;
     u->uio_segflg = UIO_USERSPACE;
     u->uio_rw = rw;
-    u-> proc_getas();
+    u->uio_space =  proc_getas();
 }
 
 int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)

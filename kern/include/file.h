@@ -25,7 +25,7 @@ struct file {
 };
 
 
-void init_file(struct file *newfile, struct vnode *vn, int flags, char *path_name);
+
 
 
 #endif /* _FILE_H_ */
