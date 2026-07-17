@@ -60,8 +60,9 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
 
     init_file(new_file, vn, flags, kernel_path);
 
-        // For when index found
-        int fd;
+    // For when index found
+    // Default is negative??
+    int fd = -1;
 
     // acquire lock for current process
     spinlock_acquire(&curproc->p_lock);
