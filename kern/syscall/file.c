@@ -29,6 +29,19 @@ void init_file(struct file *new_file, struct vnode *vn, int flags, char *path_na
     new_file->lock = lock_create(path_name);
 }
 
+// This uses the userptr and not the kernel buf idk
+void uio_init(struct iovec *iov, struct uio *u, userptr_t buf, size_t len, off_t offset, enum uio_rw rw){
+    iov->iov_base = buf;
+    iov->iov_len = len;
+    u->uio_iov = iov;
+    u->uio_iovcnt = 1;
+    u->uio_offset = offset;
+    u->uio_resid = len;
+    u->uio_segflg = UIO_USERSPACE;
+    u->uio_rw = rw;
+    u-> proc_getas();
+}
+
 int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
 {
 
@@ -95,8 +108,11 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
     return 0;
 }
 
-int sys_write(int fd, userptr_t buf, size_t size)
+int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
 {
+    if (fd < 0 || fd >= OPEN_MAX) {
+        return EBADF;
+    }
 
     int result;
 
@@ -104,12 +120,50 @@ int sys_write(int fd, userptr_t buf, size_t size)
 
     result = copyin(buf, &kernel_buf, size);
 
+
     if (result)
     {
         return result;
     }
 
-    (void)fd;
+    kprintf("in sys_write() fd is %d, buf is %s\n", fd, kernel_buf);
 
+    // Later deal with stdard FDs
+
+    spinlock_acquire(&curproc->p_lock);
+    struct file *this_file = currproc->fd_table[fd];
+
+    
+    if (this_file == NULL){
+        spinlock_release(&curproc->p_lock);
+        return EBADF;
+    }
+
+    // Check if has write permission
+    if ((this_file->flags & O_WRONLY) == 0 &&
+        (this_file->flags & O_RDWR) == 0) {
+        return EBADF;
+    }
+    struct uio u;
+    struct iovec iov;
+    uio_init(&uiov, &u, buf, size, file->offset, UIO_WRITE);
+    lock_acquire(this_file->lock);
+        result = VOP_WRITE(this_file->vn, u);
+    lock_release(this_file->lock);
+
+
+    spinlock_release(&curproc->p_lock);
+
+    if (result){
+        return result;
+    }
+    this_file->offset = u.offset;
+    
+    *ret_val = size - u.uio_resid;
     return 0;
+}
+
+// TODO: destroy file in fd_table when refcount == 0
+int sys_close(){
+
 }
