@@ -127,6 +127,7 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
 
     if (result)
     {
+        kprintf("copyin failed.\n");
         return result;
     }
 
