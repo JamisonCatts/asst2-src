@@ -19,7 +19,7 @@
  * Add your file-related functions here ...
  */
 
-void init_file(struct file *newfile, struct vnode *vn, int flags, char *path_name)
+void init_file(struct file *new_file, struct vnode *vn, int flags, char *path_name)
 {
     new_file->vn = vn;
     new_file->offset = 0;
