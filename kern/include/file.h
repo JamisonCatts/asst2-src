@@ -24,7 +24,8 @@ struct file {
     struct lock *lock;
 };
 
-int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval);
-int sys_write(int fd, userptr_t buf, size_t size);
+
+void init_file(struct file *newfile, struct vnode *vn, int flags, char *path_name);
+
 
 #endif /* _FILE_H_ */
