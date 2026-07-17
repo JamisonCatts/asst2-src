@@ -19,14 +19,14 @@
  * Add your file-related functions here ...
  */
 
-void init_file(struct file *newfile, struct *vnode vn, int flags, char *path_name)
+void init_file(struct file *newfile, struct vnode *vn, int flags, char *path_name)
 {
     new_file->vn = vn;
     new_file->offset = 0;
     new_file->flags = flags;
     new_file->ref_count = 1;
     new_file->lock = lock_create(path_name);
-}
+};
 
 int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
 {
