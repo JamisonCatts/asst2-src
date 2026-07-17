@@ -52,7 +52,7 @@ struct vnode {
 	int vn_refcount;                /* Reference count */
 	struct spinlock vn_countlock;   /* Lock for vn_refcount */
 
-	struct fs *vn_fs;               /* Filesystem vnode belongs to */
+	struct fs *vn_fs;               /* Filesystem vnode belongs to */ 
 
 	void *vn_data;                  /* Filesystem-specific data */
 
