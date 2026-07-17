@@ -64,7 +64,7 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
         int fd;
 
     // acquire lock for current process
-    spinlock_acquire(curproc->p_lock);
+    spinlock_acquire(&curproc->p_lock);
 
     for (int i = 3; i < OPEN_MAX; i++)
     {
@@ -75,7 +75,7 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
             break;
         }
     }
-    spinlock_release(curproc->p_lock);
+    spinlock_release(&curproc->p_lock);
 
     // If can't open any more files
     if (i == OPEN_MAX)
