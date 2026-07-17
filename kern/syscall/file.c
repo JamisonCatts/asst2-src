@@ -111,6 +111,9 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
 
 int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
 {
+
+    // Assume there will be an error
+    *ret_val = -1;
     if (fd < 0 || fd >= OPEN_MAX) {
         return EBADF;
     }
