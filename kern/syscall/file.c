@@ -123,8 +123,6 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *retval)
 
 
 
-    kprintf("in sys_write() fd is %d, buf is %s\n", fd, kernel_buf);
-
     // Later deal with stdard FDs
 
     spinlock_acquire(&curproc->p_lock);
