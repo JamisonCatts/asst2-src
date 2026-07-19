@@ -237,16 +237,18 @@ int sys_close(int fd)
 
     lock_acquire(this_file->lock);
     this_file->ref_count--;
+    kprintf("In sys_close() closing fd %d\n", fd);
     if (this_file->ref_count == 0)
     {
-
+        
+        kprintf("In sys_close() ref count is 0, destroying file %d\n", fd);
         struct vnode *vn = this_file->vn;
-
+        
         lock_release(this_file->lock);
         // destroy lock because not needed
         lock_destroy(this_file->lock);
         vfs_close(vn);
-
+        
         kfree(this_file);
     }
     else

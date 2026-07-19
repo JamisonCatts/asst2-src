@@ -32,6 +32,8 @@ main(int argc, char * argv[])
                 printf("ERROR opening file: %s\n", strerror(errno));
                 exit(1);
         }
+        fd2 = open("test2.file", O_RDWR | O_CREAT | O_TRUNC, 0600);
+        close(fd2);
 
         printf("* writing test string\n");
         r = write(fd, teststr, strlen(teststr));
