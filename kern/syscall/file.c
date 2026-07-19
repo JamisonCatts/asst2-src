@@ -109,7 +109,7 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
     return 0;
 }
 
-int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
+int sys_write(int fd, userptr_t buf, size_t size, int32_t *retval)
 {
 
     // Assume there will be an error
@@ -167,11 +167,11 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
     }
     this_file->offset = u.uio_offset;
 
-    *ret_val = size - u.uio_resid;
+    *retval = size - u.uio_resid;
     return 0;
 }
 
-int sys_read(int fd, userptr_t buf, size_t size, int32_t *return)
+int sys_read(int fd, userptr_t buf, size_t size, int32_t *retval)
 {
 
     if (fd < 0 || fd >= OPEN_MAX)
