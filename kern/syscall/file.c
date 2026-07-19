@@ -40,7 +40,7 @@ void uio_init(struct iovec *iov, struct uio *u, userptr_t buf, size_t len, off_t
     u->uio_resid = len;
     u->uio_segflg = UIO_USERSPACE;
     u->uio_rw = rw;
-    u->uio_space =  proc_getas();
+    u->uio_space = proc_getas();
 }
 
 int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
@@ -114,7 +114,8 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
 
     // Assume there will be an error
     // *ret_val = -1;
-    if (fd < 0 || fd >= OPEN_MAX) {
+    if (fd < 0 || fd >= OPEN_MAX)
+    {
         return EBADF;
     }
 
@@ -123,7 +124,6 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
     char kernel_buf[size];
     size_t got;
     result = copyin(buf, kernel_buf, size, &got);
-
 
     if (result)
     {
@@ -138,16 +138,17 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
     spinlock_acquire(&curproc->p_lock);
     struct file *this_file = curproc->fd_table[fd];
 
-    
-    if (this_file == NULL){
+    if (this_file == NULL)
+    {
         spinlock_release(&curproc->p_lock);
-        kprintf("bad fd given\n");
+        kprintf("in sys_write() bad fd given\n");
         return EBADF;
     }
-    
+
     // Check if has write permission
     if ((this_file->flags & O_WRONLY) == 0 &&
-    (this_file->flags & O_RDWR) == 0) {
+        (this_file->flags & O_RDWR) == 0)
+    {
         spinlock_release(&curproc->p_lock);
         return EBADF;
     }
@@ -155,26 +156,78 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
     struct iovec iov;
     uio_init(&iov, &u, buf, size, this_file->offset, UIO_WRITE);
     lock_acquire(this_file->lock);
-        result = VOP_WRITE(this_file->vn, &u);
+    result = VOP_WRITE(this_file->vn, &u);
     lock_release(this_file->lock);
-
 
     spinlock_release(&curproc->p_lock);
 
-    if (result){
+    if (result)
+    {
         return result;
     }
     this_file->offset = u.uio_offset;
-    
+
     *ret_val = size - u.uio_resid;
     return 0;
 }
 
+int sys_read(int fd, userptr_t buf, size_t size, int32_t *return)
+{
 
+    if (fd < 0 || fd >= OPEN_MAX)
+    {
+        return EBADF;
+    }
+    kprintf("in sys_read() fd is %d\n", fd);
+    int result;
 
-int sys_close(int fd){
-    
-    if (fd < 0 || fd >= OPEN_MAX) {
+    spinlock_acquire(&curproc->p_lock);
+    struct file *this_file = curproc->fd_table[fd];
+
+    if (this_file == NULL)
+    {
+        spinlock_release(&curproc->p_lock);
+        kprintf("in sys_read() bad fd given\n");
+        return EBADF;
+    }
+
+    if ((this_file->flags & O_ACCMODE) == O_WRONLY)
+    {
+        kprinf("in sys_read() bad flag\n");
+        return EBADF;
+    }
+
+    lock_acquire(this_file->lock);
+
+    struct vnode *vn = this_file->vn;
+    struct uio u;
+    struct iovec iov;
+    uio_init(&iov, &u, buf, size, this_file->offset, UIO_READ);
+    result = VOP_READ(vn, u);
+
+    if (result)
+    {
+        lock_release(this_file->lock);
+        kprintf("In sys_read() VOP_READ didn't work\n");
+        return result;
+    }
+    this_file->offset = u.uio_resid;
+    lock_release(this_file->lock);
+
+    spinlock_release(&curproc->p_lock);
+
+    *retval = size - u.uio_resid;
+
+    kprintf("In sys_read() returning %d for fd %d", *retval, fd);
+
+    return 0;
+}
+
+int sys_close(int fd)
+{
+
+    if (fd < 0 || fd >= OPEN_MAX)
+    {
         return EBADF;
     }
 
@@ -183,8 +236,8 @@ int sys_close(int fd){
     spinlock_acquire(&curproc->p_lock);
     struct file *this_file = curproc->fd_table[fd];
 
-    
-    if (this_file == NULL){
+    if (this_file == NULL)
+    {
         spinlock_release(&curproc->p_lock);
         kprintf("bad fd given\n");
         return EBADF;
@@ -196,29 +249,25 @@ int sys_close(int fd){
     spinlock_release(&curproc->p_lock);
 
     lock_acquire(this_file->lock);
-        this_file->ref_count--;
-        if (this_file->ref_count == 0){
-    
-            struct vnode *vn = this_file->vn;
-            
-            lock_release(this_file->lock);
-            // destroy lock because not needed
-            lock_destroy(this_file->lock);
-            vfs_close(vn);
+    this_file->ref_count--;
+    if (this_file->ref_count == 0)
+    {
 
-            kfree(this_file);
-        }
-        else{
-            lock_release(this_file->lock);
-        }
+        struct vnode *vn = this_file->vn;
 
-        return 0;
-    
+        lock_release(this_file->lock);
+        // destroy lock because not needed
+        lock_destroy(this_file->lock);
+        vfs_close(vn);
 
+        kfree(this_file);
+    }
+    else
+    {
+        lock_release(this_file->lock);
+    }
 
-
-
-
+    return 0;
 }
 
 // TODO: destroy file in fd_table when refcount == 0
