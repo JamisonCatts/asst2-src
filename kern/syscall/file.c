@@ -121,15 +121,7 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *retval)
 
     int result;
 
-    char kernel_buf[size];
-    size_t got;
-    result = copyin(buf, kernel_buf, size, &got);
 
-    if (result)
-    {
-        kprintf("copyin failed.\n");
-        return result;
-    }
 
     kprintf("in sys_write() fd is %d, buf is %s\n", fd, kernel_buf);
 
