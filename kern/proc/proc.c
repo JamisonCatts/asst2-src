@@ -82,8 +82,10 @@ proc_create(const char *name)
 	/* VFS fields */
 	proc->p_cwd = NULL;
 
-	// Will this work
-	proc->fd_table = { NULL };
+	// make all fd's NULL
+	for (int i = 0; i < OPEN_MAX; i++) {
+    	p->fd_table[i] = NULL;
+	}
 
 	return proc;
 }
