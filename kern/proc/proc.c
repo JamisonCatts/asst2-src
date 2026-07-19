@@ -84,7 +84,7 @@ proc_create(const char *name)
 
 	// make all fd's NULL
 	for (int i = 0; i < OPEN_MAX; i++) {
-    	p->fd_table[i] = NULL;
+    	proc->fd_table[i] = NULL;
 	}
 
 	return proc;
