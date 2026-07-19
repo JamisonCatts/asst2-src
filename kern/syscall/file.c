@@ -121,8 +121,8 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
     int result;
 
     char kernel_buf[size];
-    // size_t got;
-    result = copyin(buf, kernel_buf, size);
+    size_t got;
+    result = copyin(buf, kernel_buf, size, &got);
 
 
     if (result)
@@ -141,12 +141,14 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
     
     if (this_file == NULL){
         spinlock_release(&curproc->p_lock);
+        kprintf("bad fd given\n");
         return EBADF;
     }
-
+    
     // Check if has write permission
     if ((this_file->flags & O_WRONLY) == 0 &&
-        (this_file->flags & O_RDWR) == 0) {
+    (this_file->flags & O_RDWR) == 0) {
+        spinlock_release(&curproc->p_lock);
         return EBADF;
     }
     struct uio u;
@@ -166,6 +168,57 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *ret_val)
     
     *ret_val = size - u.uio_resid;
     return 0;
+}
+
+
+
+int sys_close(int fd){
+    
+    if (fd < 0 || fd >= OPEN_MAX) {
+        return EBADF;
+    }
+
+    int result;
+
+    spinlock_acquire(&curproc->p_lock);
+    struct file *this_file = curproc->fd_table[fd];
+
+    
+    if (this_file == NULL){
+        spinlock_release(&curproc->p_lock);
+        kprintf("bad fd given\n");
+        return EBADF;
+    }
+
+    // remove reference to file while holding onto file
+    curproc->fd_table[fd] = NULL;
+    // release process now
+    spinlock_release(&curproc->p_lock);
+
+    lock_acquire(this_file->lock);
+        this_file->ref_count--;
+        if (this_file->ref_count == 0){
+    
+            struct vnode *vn = this_file->vn;
+            
+            lock_release(this_file->lock);
+            // destroy lock because not needed
+            lock_destroy(this_file->lock);
+            vfs_close(vn);
+
+            kfree(this_file);
+        }
+        else{
+            lock_release(this_file->lock);
+        }
+
+        return 0;
+    
+
+
+
+
+
 }
 
 // TODO: destroy file in fd_table when refcount == 0
