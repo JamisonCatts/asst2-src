@@ -110,7 +110,9 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
 }
 
 int sys_write(int fd, userptr_t buf, size_t size, int32_t *retval)
-{
+{   
+    // is this for std
+	// result = vfs_open("con:", O_WRONLY, 0664, &wv);
 
     // Assume there will be an error
     // *ret_val = -1;

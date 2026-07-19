@@ -48,6 +48,11 @@
 #include <current.h>
 #include <addrspace.h>
 #include <vnode.h>
+// I included these
+#include <vfs.h>
+#include <limits.h>
+#include <fcntl.h>
+#include <file.h>
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
@@ -82,8 +87,34 @@ proc_create(const char *name)
 	/* VFS fields */
 	proc->p_cwd = NULL;
 
+
+
+	proc->fd_table[0] = NULL;
 	// make all fd's NULL
-	for (int i = 0; i < OPEN_MAX; i++) {
+	struct vnode *out_vn;
+	char path[5];
+	strcpy(path, "con:");
+	int res;
+	int out_flags = 0664;
+	res = vfs_open(path, O_WRONLY, out_flags, &out_vn);
+
+	if (res){
+		kprintf("opening con: vnode didn't work");
+		proc->fd_table[1] = NULL;
+	}
+	else{
+		struct file *out_file = kmalloc(sizeof(struct file));
+		if (out_file == NULL){
+			kprintf("making output file didn't work\n");
+			proc->fd_table[1] = NULL;
+			break;
+		}
+		void init_file(out_file, out_vn, out_flags, path);
+		proc->fd_table[1] = out_file;
+	}
+
+	proc->fd_table[2] = NULL;
+	for (int i = 3; i < OPEN_MAX; i++) {
     	proc->fd_table[i] = NULL;
 	}
 
@@ -107,6 +138,7 @@ proc_destroy(struct proc *proc)
 	 * do, some don't.
 	 */
 
+	 //TODO: need to destroy stuff I made in proc_create
 	KASSERT(proc != NULL);
 	KASSERT(proc != kproc);
 
