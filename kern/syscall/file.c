@@ -193,7 +193,7 @@ int sys_read(int fd, userptr_t buf, size_t size, int32_t *retval)
 
     if ((this_file->flags & O_ACCMODE) == O_WRONLY)
     {
-        kprinf("in sys_read() bad flag\n");
+        kprintf("in sys_read() bad flag\n");
         return EBADF;
     }
 
@@ -203,7 +203,7 @@ int sys_read(int fd, userptr_t buf, size_t size, int32_t *retval)
     struct uio u;
     struct iovec iov;
     uio_init(&iov, &u, buf, size, this_file->offset, UIO_READ);
-    result = VOP_READ(vn, u);
+    result = VOP_READ(vn, &u);
 
     if (result)
     {
@@ -231,7 +231,6 @@ int sys_close(int fd)
         return EBADF;
     }
 
-    int result;
 
     spinlock_acquire(&curproc->p_lock);
     struct file *this_file = curproc->fd_table[fd];
