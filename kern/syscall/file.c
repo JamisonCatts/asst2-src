@@ -127,29 +127,27 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *retval)
 
     spinlock_acquire(&curproc->p_lock);
     struct file *this_file = curproc->fd_table[fd];
+    spinlock_release(&curproc->p_lock);
 
     if (this_file == NULL)
     {
-        spinlock_release(&curproc->p_lock);
         kprintf("in sys_write() bad fd given\n");
         return EBADF;
     }
-
+    lock_acquire(this_file->lock);
     // Check if has write permission
     if ((this_file->flags & O_WRONLY) == 0 &&
         (this_file->flags & O_RDWR) == 0)
     {
-        spinlock_release(&curproc->p_lock);
+        lock_release(this_file->lock);
         return EBADF;
     }
     struct uio u;
     struct iovec iov;
     uio_init(&iov, &u, buf, size, this_file->offset, UIO_WRITE);
-    lock_acquire(this_file->lock);
     result = VOP_WRITE(this_file->vn, &u);
     lock_release(this_file->lock);
 
-    spinlock_release(&curproc->p_lock);
 
     if (result)
     {
@@ -171,23 +169,25 @@ int sys_read(int fd, userptr_t buf, size_t size, int32_t *retval)
     kprintf("in sys_read() fd is %d\n", fd);
     int result;
 
+    // spinlock only to get file
     spinlock_acquire(&curproc->p_lock);
     struct file *this_file = curproc->fd_table[fd];
+    spinlock_release(&curproc->p_lock);
 
     if (this_file == NULL)
     {
-        spinlock_release(&curproc->p_lock);
         kprintf("in sys_read() bad fd given\n");
         return EBADF;
     }
 
+    lock_acquire(this_file->lock);
     if ((this_file->flags & O_ACCMODE) == O_WRONLY)
     {
+        lock_release(this_file->lock);
         kprintf("in sys_read() bad flag\n");
         return EBADF;
     }
 
-    lock_acquire(this_file->lock);
 
     struct vnode *vn = this_file->vn;
     struct uio u;
@@ -204,7 +204,6 @@ int sys_read(int fd, userptr_t buf, size_t size, int32_t *retval)
     this_file->offset = u.uio_resid;
     lock_release(this_file->lock);
 
-    spinlock_release(&curproc->p_lock);
 
     *retval = size - u.uio_resid;
 
@@ -224,10 +223,10 @@ int sys_close(int fd)
 
     spinlock_acquire(&curproc->p_lock);
     struct file *this_file = curproc->fd_table[fd];
+    spinlock_release(&curproc->p_lock);
 
     if (this_file == NULL)
     {
-        spinlock_release(&curproc->p_lock);
         kprintf("bad fd given\n");
         return EBADF;
     }
@@ -235,7 +234,6 @@ int sys_close(int fd)
     // remove reference to file while holding onto file
     curproc->fd_table[fd] = NULL;
     // release process now
-    spinlock_release(&curproc->p_lock);
 
     lock_acquire(this_file->lock);
     this_file->ref_count--;
