@@ -1,0 +1,14 @@
+PART 1:
+    * The magic number helping detect if the vnode_ops struct is uninitilized or points to the wrong object. 
+        All the other attributes are function pointers so the kernel doesn't know about the memory they will hold but it can compare the 
+        magic number attribute to see if the vnode attribute for vnode_ops is initialized. It is compared during the sfs mounting function.
+    
+    * I added an fd_table of file struct pointers to the proc struct. I used a lock in the file struct to avoid concurrency issues when 
+        accessing a file. I initiliazed the whole table to NULL and made sure to reset to null when a file is closed to be sure what file descriptors are in use and 
+        which aren't. I used the OPEN_MAX limit as the size as no more files could be open at once. I added a ref_count attribute for dup2() as
+        multiple fd's could point to the same file object. I reserved 0:2 for the stdin, stdout, and sterr file descriptors. 
+        
+    *
+
+
+PART2:

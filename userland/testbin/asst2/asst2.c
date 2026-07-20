@@ -124,6 +124,12 @@ main(int argc, char * argv[])
         } while (k < 5);
 
         printf("* file lseek  okay\n");
+
+        printf("****TESTING dup2()******");
+
+        dup2(fd, 10);
+        
+        
         printf("* closing file\n");
         close(fd);
 
