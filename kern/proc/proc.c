@@ -51,8 +51,9 @@
 // I included these
 #include <vfs.h>
 #include <limits.h>
-#include <fcntl.h>
+#include <kern/fcntl.h>
 #include <file.h>
+#include <synch.h>
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
@@ -238,8 +239,9 @@ proc_create_runprogram(const char *name)
 	char path[5];
 	strcpy(path, "con:");
 	int res;
-	int out_flags = 0664;
-	res = vfs_open(path, O_WRONLY, out_flags, &out_vn);
+	int out_flags = O_WRONLY;
+    // Not worrying about mode for std stuff
+	res = vfs_open(path, 0, out_flags, &out_vn);
 	
 	if (res){
 		kprintf("opening con: vnode didn't work");

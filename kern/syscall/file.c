@@ -52,12 +52,15 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
     size_t got;
     result = copyinstr(path, kernel_path, PATH_MAX, &got);
 
+    // indicate error until proven otherwise
+    *retval = -1;
+
     if (result)
     {
         return result;
     }
 
-    kprintf("in sys_open() path is %s\n", kernel_path);
+    // kprintf("in sys_open() path is %s\n", kernel_path);
 
     result = vfs_open(kernel_path, flags, mode, &vn);
 
@@ -102,7 +105,7 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
         return ENOMEM;
     }
 
-    kprintf("in sys_open() new fd is %d\n", fd);
+    // kprintf("in sys_open() new fd is %d\n", fd);
 
     *retval = fd;
 
@@ -123,6 +126,7 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *retval)
 
     int result;
 
+    // kprintf("entered sys_write with fd: %d\n", fd);
 
 
     // Later deal with stdard FDs
@@ -138,10 +142,11 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *retval)
     }
     lock_acquire(this_file->lock);
     // Check if has write permission
-    if ((this_file->flags & O_WRONLY) == 0 &&
-        (this_file->flags & O_RDWR) == 0)
+    int how = this_file->flags & O_ACCMODE;
+    if (!(how == O_WRONLY || how == O_RDWR))
     {
         lock_release(this_file->lock);
+        kprintf("In sys_write() flags said couldn't write\n");
         return EBADF;
     }
     struct uio u;
@@ -168,7 +173,7 @@ int sys_read(int fd, userptr_t buf, size_t size, int32_t *retval)
     {
         return EBADF;
     }
-    kprintf("in sys_read() fd is %d\n", fd);
+    // kprintf("in sys_read() fd is %d\n", fd);
     int result;
 
     // spinlock only to get file
@@ -209,7 +214,7 @@ int sys_read(int fd, userptr_t buf, size_t size, int32_t *retval)
 
     *retval = size - u.uio_resid;
 
-    kprintf("In sys_read() returning %d for fd %d", *retval, fd);
+    // kprintf("In sys_read() returning %d for fd %d\n", *retval, fd);
 
     return 0;
 }
@@ -239,11 +244,11 @@ int sys_close(int fd)
 
     lock_acquire(this_file->lock);
     this_file->ref_count--;
-    kprintf("In sys_close() closing fd %d\n", fd);
+    // kprintf("In sys_close() closing fd %d\n", fd);
     if (this_file->ref_count == 0)
     {
         
-        kprintf("In sys_close() ref count is 0, destroying file %d\n", fd);
+        // kprintf("In sys_close() ref count is 0, destroying file %d\n", fd);
         struct vnode *vn = this_file->vn;
         
         lock_release(this_file->lock);

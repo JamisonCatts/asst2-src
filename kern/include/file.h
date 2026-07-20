@@ -9,6 +9,7 @@
  * Contains some file-related maximum length constants
  */
 #include <limits.h>
+#include <uio.h>
 
 
 /*
