@@ -89,32 +89,10 @@ proc_create(const char *name)
 
 
 
-	proc->fd_table[0] = NULL;
-	// make all fd's NULL
-	struct vnode *out_vn;
-	char path[5];
-	strcpy(path, "con:");
-	int res;
-	int out_flags = 0664;
-	res = vfs_open(path, O_WRONLY, out_flags, &out_vn);
-
-	if (res){
-		kprintf("opening con: vnode didn't work");
-		proc->fd_table[1] = NULL;
-	}
-	else{
-		struct file *out_file = kmalloc(sizeof(struct file));
-		if (out_file == NULL){
-			kprintf("making output file didn't work\n");
-			proc->fd_table[1] = NULL;
-			break;
-		}
-		void init_file(out_file, out_vn, out_flags, path);
-		proc->fd_table[1] = out_file;
-	}
+	
 
 	proc->fd_table[2] = NULL;
-	for (int i = 3; i < OPEN_MAX; i++) {
+	for (int i = 0; i < OPEN_MAX; i++) {
     	proc->fd_table[i] = NULL;
 	}
 
@@ -252,6 +230,29 @@ proc_create_runprogram(const char *name)
 	if (curproc->p_cwd != NULL) {
 		VOP_INCREF(curproc->p_cwd);
 		newproc->p_cwd = curproc->p_cwd;
+	}
+
+	// TODO: move the fd_table stuff to here
+	// make all fd's NULL
+	struct vnode *out_vn;
+	char path[5];
+	strcpy(path, "con:");
+	int res;
+	int out_flags = 0664;
+	res = vfs_open(path, O_WRONLY, out_flags, &out_vn);
+	
+	if (res){
+		kprintf("opening con: vnode didn't work");
+	}
+	else{
+		struct file *out_file = kmalloc(sizeof(struct file));
+		if (out_file == NULL){
+			kprintf("making output file didn't work\n");
+			break;
+		}
+		// cna't use proce_getas here
+		void init_file(out_file, out_vn, out_flags, path);
+		proc->fd_table[1] = out_file;
 	}
 	spinlock_release(&curproc->p_lock);
 
