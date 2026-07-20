@@ -266,7 +266,68 @@ int sys_close(int fd)
     return 0;
 }
 
-// TODO: destroy file in fd_table when refcount == 0
-// int sys_close(){
+int sys_lseek(int fd, off_t offset, int whence, off_t *retval){
+
+    *retval = -1;
+
+    if (fd < 0 || fd >= OPEN_MAX)
+    {
+        return EBADF;
+    }
+    int result;
+
+    kprintf("----lseek() entered with fd: %d and offset %lld\n", fd, (long long)offset);
+
+    spinlock_acquire(&curproc->p_lock);
+    struct file *this_file = curproc->fd_table[fd];
+    spinlock_release(&curproc->p_lock);
+
+    if (this_file == NULL)
+    {
+        kprintf("in lseek() bad fd given\n");
+        return EBADF;
+    }
+
+    lock_acquire(this_file->lock);
+
+    if (!VOP_ISSEEKABLE(this_file->vn)){
+        kprintf("lseek failed because not seekable\n");
+        lock_release(this_file->lock);
+        return ESPIPE;
+    }
+
+    switch(whence){
+        case SEEK_SET:
+            kprintf("----In lseek(). in SEEK_SET case\n");
+            this_file->offset = offset;
+            *retval = this_file->offset;
+            break;
+        case SEEK_CUR:
+            this_file->offset+= offset;
+            *retval = this_file->offset;
+            break;
+        case SEEK_END:
+            ;
+            struct stat this_file_stat;
+            result = VOP_STAT(this_file->vn, &this_file_stat);
+            if (result){
+                return result;
+            }
+            kprintf("lseek() called with SEEK_END. file size: %jd\n", this_file_stat.st_size);
+            this_file->offset = this_file_stat.st_size + offset;
+            *retval = this_file->offset;
+            break;
+        default:
+            kprintf("----In lseek() bad whence given\n");
+            return EINVAL;
+            break;
+    }
+    lock_release(this_file->lock);
+
+
+    return 0;
+}
+
+// int dup2(){
 
 // }

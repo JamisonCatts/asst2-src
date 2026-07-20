@@ -35,6 +35,9 @@
 #include <thread.h>
 #include <current.h>
 #include <syscall.h>
+// I included this
+#include <endian.h>
+#include <copyinout.h>
 
 
 /*
@@ -127,6 +130,19 @@ syscall(struct trapframe *tf)
 		case SYS_close:
 			err = sys_close((int)tf->tf_a0);
 			break;
+        case SYS_lseek:
+            ;
+            uint64_t offset;
+            int whence;
+            off_t retval64;
+
+            join32to64((uint32_t)tf->tf_a2, (uint32_t)tf->tf_a3, &offset);
+
+            copyin((userptr_t)tf->tf_sp + 16, &whence, sizeof(int));
+
+            err = sys_lseek((int) tf->tf_a0, offset, whence,&retval64);
+            split64to32(retval64, &tf->tf_v0, &tf->tf_v1);
+            break;
 	    default:
 			kprintf("Unknown syscall %d\n", callno);
 		err = ENOSYS;
@@ -145,7 +161,9 @@ syscall(struct trapframe *tf)
 	}
 	else {
 		/* Success. */
-		tf->tf_v0 = retval;
+        if (callno != SYS_lseek){
+            tf->tf_v0 = retval;
+        }
 		tf->tf_a3 = 0;      /* signal no error */
 	}
 
