@@ -66,5 +66,6 @@ int sys_read(int fd, userptr_t buf, size_t size, int32_t *retval);
 int sys_write(int fd, userptr_t buf, size_t size, int32_t *retval);
 
 int sys_lseek(int fd, off_t offset, int whence, off_t *retval);
+int dup2(int old_fd, int new_fd, int32_t *retval);
 
 #endif /* _SYSCALL_H_ */

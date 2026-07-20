@@ -276,7 +276,7 @@ int sys_lseek(int fd, off_t offset, int whence, off_t *retval){
     }
     int result;
 
-    kprintf("----lseek() entered with fd: %d and offset %lld\n", fd, (long long)offset);
+    // kprintf("----lseek() entered with fd: %d and offset %lld\n", fd, (long long)offset);
 
     spinlock_acquire(&curproc->p_lock);
     struct file *this_file = curproc->fd_table[fd];
@@ -328,6 +328,72 @@ int sys_lseek(int fd, off_t offset, int whence, off_t *retval){
     return 0;
 }
 
-// int dup2(){
+int dup2(int old_fd, int new_fd, int32_t *retval){
 
-// }
+    *ret
+    if (old_fd < 0 || old_fd >= OPEN_MAX || new_fd < 0 || new_fd >= OPEN_MAX)
+    {
+        return EBADF;
+    }
+
+    // Check for same fd given
+    if (old_fd == new_fd) {
+        *retval = new_fd;
+        return 0;
+    }
+
+
+    int result;
+
+    spinlock_acquire(&curproc->p_lock);
+    struct file *old_file = curproc->fd_table[old_fd];
+
+    if (old_file == NULL){
+        kprintf("in lseek() bad fd given\n");
+        spinlock_release(&curproc->p_lock);
+        return EBADF;
+    }
+
+    struct file *new_file = curproc->fd_table[new_fd];
+
+
+    // Close file if there is a file
+    if (new_file != NULL){
+    lock_acquire(new_file->lock);
+    new_file->ref_count--;
+    // kprintf("In sys_dup2() closing old fd %d\n", old_fd);
+    if (new_file->ref_count == 0)
+    {
+        
+        // kprintf("In sys_close() ref count is 0, destroying file %d\n", fd);
+        struct vnode *vn = new_file->vn;
+        
+        lock_release(new_file->lock);
+        // destroy lock because not needed
+        lock_destroy(new_file->lock);
+        vfs_close(vn);
+        
+        kfree(new_file);
+    }
+    else
+    {
+        lock_release(new_file->lock);
+    }
+
+    // New_fd file dealt with now
+    curproc->fd_table[new_fd] = old_file;
+
+    // increase ref count and we're good
+    lock_acquire(old_file->lock);
+    old_file->ref_count++;
+    lock_release(old_file->lock);
+    }
+
+    spinlock_release(&curproc->p_lock);
+
+    *ret_val = new_fd;
+
+    
+
+    return 0;
+}
