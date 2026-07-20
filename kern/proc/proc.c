@@ -91,7 +91,7 @@ proc_create(const char *name)
 
 	
 
-	proc->fd_table[2] = NULL;
+	
 	for (int i = 0; i < OPEN_MAX; i++) {
     	proc->fd_table[i] = NULL;
 	}
@@ -248,11 +248,21 @@ proc_create_runprogram(const char *name)
 		struct file *out_file = kmalloc(sizeof(struct file));
 		if (out_file == NULL){
 			kprintf("making output file didn't work\n");
-			break;
+			
 		}
-		// cna't use proce_getas here
-		void init_file(out_file, out_vn, out_flags, path);
-		proc->fd_table[1] = out_file;
+        else {
+            // cna't use proce_getas here
+            struct file *out_file = kmalloc(sizeof(struct file));
+            out_file->vn = out_vn;
+            out_file->offset = 0;
+            out_file->flags = out_flags;
+            out_file->ref_count = 2;
+            out_file->lock = lock_create(path);
+            
+            // Set both stdout and sterr
+            newproc->fd_table[1] = out_file;
+            newproc->fd_table[2] = out_file;
+        }
 	}
 	spinlock_release(&curproc->p_lock);
 
