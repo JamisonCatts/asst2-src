@@ -7,8 +7,11 @@ PART 1:
         accessing a file. I initiliazed the whole table to NULL and made sure to reset to null when a file is closed to be sure what file descriptors are in use and 
         which aren't. I used the OPEN_MAX limit as the size as no more files could be open at once. I added a ref_count attribute for dup2() as
         multiple fd's could point to the same file object. I reserved 0:2 for the stdin, stdout, and sterr file descriptors. 
-        
-    *
+
+    * vfs_open() finds the parent directory and calls VOP_CREATE() from the vnode_ops struct. These are function pointers set when mounting the file system.
+        It also sets O_EXCL to determine whether to replace a pre-existing file. The VOP functions are not known before mounting so the vfs doesn't need to know
+        how it executes. 
 
 
 PART2:
+    * 
