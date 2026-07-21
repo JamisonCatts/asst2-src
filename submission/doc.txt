@@ -14,4 +14,5 @@ PART 1:
 
 
 PART2:
-    * 
+    * sfs_isseekable() always returns true. Assuming files include everything that can be represented as a file descriptor/ vnode 
+        

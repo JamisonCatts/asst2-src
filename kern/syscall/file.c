@@ -274,6 +274,8 @@ int sys_lseek(int fd, off_t offset, int whence, off_t *retval){
     {
         return EBADF;
     }
+
+    
     int result;
 
     // kprintf("----lseek() entered with fd: %d and offset %lld\n", fd, (long long)offset);
@@ -298,13 +300,19 @@ int sys_lseek(int fd, off_t offset, int whence, off_t *retval){
 
     switch(whence){
         case SEEK_SET:
-            kprintf("----In lseek(). in SEEK_SET case\n");
+            // File offset will be negative 
+            if (offset < 0){
+                return EINVAL;
+            }
             this_file->offset = offset;
-            *retval = this_file->offset;
+            
             break;
         case SEEK_CUR:
+            if (this_file->offset + offset < 0){
+                return EINVAL;
+            }
             this_file->offset+= offset;
-            *retval = this_file->offset;
+            
             break;
         case SEEK_END:
             ;
@@ -313,9 +321,11 @@ int sys_lseek(int fd, off_t offset, int whence, off_t *retval){
             if (result){
                 return result;
             }
-            kprintf("lseek() called with SEEK_END. file size: %jd\n", this_file_stat.st_size);
+            if (this_file_stat.st_size + offset < 0){
+                return EINVAL;
+            }
             this_file->offset = this_file_stat.st_size + offset;
-            *retval = this_file->offset;
+            
             break;
         default:
             kprintf("----In lseek() bad whence given\n");
@@ -324,6 +334,7 @@ int sys_lseek(int fd, off_t offset, int whence, off_t *retval){
     }
     lock_release(this_file->lock);
 
+    *retval = this_file->offset;
 
     return 0;
 }
