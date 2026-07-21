@@ -330,9 +330,13 @@ int sys_lseek(int fd, off_t offset, int whence, off_t *retval){
 
 int dup2(int old_fd, int new_fd, int32_t *retval){
 
-    *ret
-    if (old_fd < 0 || old_fd >= OPEN_MAX || new_fd < 0 || new_fd >= OPEN_MAX)
+    *retval = -1;
+    if (old_fd < 0 || old_fd >= OPEN_MAX)
     {
+        return EBADF;
+    }
+
+    if (new_fd < 0 || new_fd >= OPEN_MAX){
         return EBADF;
     }
 
@@ -343,7 +347,6 @@ int dup2(int old_fd, int new_fd, int32_t *retval){
     }
 
 
-    int result;
 
     spinlock_acquire(&curproc->p_lock);
     struct file *old_file = curproc->fd_table[old_fd];
@@ -391,7 +394,7 @@ int dup2(int old_fd, int new_fd, int32_t *retval){
 
     spinlock_release(&curproc->p_lock);
 
-    *ret_val = new_fd;
+    *retval = new_fd;
 
     
 
