@@ -328,7 +328,6 @@ int sys_lseek(int fd, off_t offset, int whence, off_t *retval){
             
             break;
         default:
-            kprintf("----In lseek() bad whence given\n");
             return EINVAL;
             break;
     }

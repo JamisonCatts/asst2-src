@@ -1,7 +1,7 @@
 PART 1:
-    * The magic number helping detect if the vnode_ops struct is uninitilized or points to the wrong object. 
+    * The magic number helps detect if the vnode_ops struct is uninitilized or points to the wrong object. 
         All the other attributes are function pointers so the kernel doesn't know about the memory they will hold but it can compare the 
-        magic number attribute to see if the vnode attribute for vnode_ops is initialized. It is compared during the sfs mounting function.
+        magic number attribute to see if the vnode_ops attribute for the vnode struct is initialized. It is compared during the sfs mounting function.
     
     * I added an fd_table of file struct pointers to the proc struct. I used a lock in the file struct to avoid concurrency issues when 
         accessing a file. I initiliazed the whole table to NULL and made sure to reset to null when a file is closed to be sure what file descriptors are in use and 
@@ -14,5 +14,15 @@ PART 1:
 
 
 PART2:
-    * sfs_isseekable() always returns true. Assuming files include everything that can be represented as a file descriptor/ vnode 
-        
+    * sfs_isseekable() always returns true. Assuming files include everything that can be represented as a file descriptor/ vnode,
+        pipes are a type of file that aren't seekable as you can go backwards into a pipe it only forwards data. STDERR, STDIN, and stdout
+        aren't seekable as you can't move backwards through keyboard input. VOP_ISSEEKABLE() is the function pointer in vnode_ops that is responsible
+        for determining whether a vnode is seekable. Device nodes will use dev_isseekable()
+    * In Part I set up the fd_table, the file struct, and the helper functions for uio and file initialization. lseek() and dup2() depended
+        on the fd_table so less work was needed in part 2 however lseek() required modifying syscall.c for argument, stack, and return value
+        manipulation that the other functions didn't.
+    * The ref_count value keeps track of how many parts of the kernel hold a reference to the vnode at once. One process can hold multiple references
+        to the same vnode and multiple processes can as well. As long as there is one active reference to a vnode it should remain but
+        if ref_count == 0 and no process holds a reference, the vnode memory can be freed. This is why the vnode lock is important so 
+        the ref_count isn't double written to and never reaches 0 or is freed while one process still needs it. 
+
