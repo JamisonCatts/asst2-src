@@ -125,9 +125,37 @@ main(int argc, char * argv[])
 
         printf("* file lseek  okay\n");
 
-        printf("****TESTING dup2()******");
+        printf("****TESTING dup2()******\n");
 
-        dup2(fd, 10);
+        r = dup2(fd, 10);
+        if (r < 0 || r != 10){
+            printf("dup2 failed r = %d\n", r);
+        }
+        int my_fd;
+        char my_test_string[] = "boingo";
+        my_fd = open("dup_test.file", O_RDWR);
+        if (r < 0){
+            printf("my open didn' work\n");
+        }
+        char my_buf[MAX_BUF];
+        
+        r = write(my_fd, &my_test_string, strlen(my_test_string));
+        if (r < 0){
+            printf("my write failed\n");
+        }
+
+        r = dup2(my_fd, 11);
+        if (r < 0){
+            printf("duping dup_test failed\n");
+        }
+        r = read(11, my_buf, strlen(my_test_string));
+        if (r < 0){
+            printf("reading from newfd failed\n");
+        }
+        if (strcmp(my_buf, teststr) != 0){
+            printf("string from duped file not the same");
+        }
+
         
         
         printf("* closing file\n");

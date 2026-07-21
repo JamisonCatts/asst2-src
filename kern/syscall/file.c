@@ -60,7 +60,6 @@ int sys_open(userptr_t path, int flags, mode_t mode, int32_t *retval)
         return result;
     }
 
-    // kprintf("in sys_open() path is %s\n", kernel_path);
 
     result = vfs_open(kernel_path, flags, mode, &vn);
 
@@ -137,7 +136,6 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *retval)
 
     if (this_file == NULL)
     {
-        kprintf("in sys_write() bad fd given\n");
         return EBADF;
     }
     lock_acquire(this_file->lock);
@@ -146,7 +144,6 @@ int sys_write(int fd, userptr_t buf, size_t size, int32_t *retval)
     if (!(how == O_WRONLY || how == O_RDWR))
     {
         lock_release(this_file->lock);
-        kprintf("In sys_write() flags said couldn't write\n");
         return EBADF;
     }
     struct uio u;
@@ -173,7 +170,6 @@ int sys_read(int fd, userptr_t buf, size_t size, int32_t *retval)
     {
         return EBADF;
     }
-    // kprintf("in sys_read() fd is %d\n", fd);
     int result;
 
     // spinlock only to get file
@@ -183,7 +179,6 @@ int sys_read(int fd, userptr_t buf, size_t size, int32_t *retval)
 
     if (this_file == NULL)
     {
-        kprintf("in sys_read() bad fd given\n");
         return EBADF;
     }
 
@@ -191,7 +186,6 @@ int sys_read(int fd, userptr_t buf, size_t size, int32_t *retval)
     if ((this_file->flags & O_ACCMODE) == O_WRONLY)
     {
         lock_release(this_file->lock);
-        kprintf("in sys_read() bad flag\n");
         return EBADF;
     }
 
@@ -205,7 +199,6 @@ int sys_read(int fd, userptr_t buf, size_t size, int32_t *retval)
     if (result)
     {
         lock_release(this_file->lock);
-        kprintf("In sys_read() VOP_READ didn't work\n");
         return result;
     }
     this_file->offset = u.uio_resid;
@@ -214,7 +207,6 @@ int sys_read(int fd, userptr_t buf, size_t size, int32_t *retval)
 
     *retval = size - u.uio_resid;
 
-    // kprintf("In sys_read() returning %d for fd %d\n", *retval, fd);
 
     return 0;
 }
@@ -234,7 +226,6 @@ int sys_close(int fd)
 
     if (this_file == NULL)
     {
-        kprintf("bad fd given\n");
         return EBADF;
     }
 
@@ -244,11 +235,9 @@ int sys_close(int fd)
 
     lock_acquire(this_file->lock);
     this_file->ref_count--;
-    // kprintf("In sys_close() closing fd %d\n", fd);
     if (this_file->ref_count == 0)
     {
         
-        // kprintf("In sys_close() ref count is 0, destroying file %d\n", fd);
         struct vnode *vn = this_file->vn;
         
         lock_release(this_file->lock);
@@ -278,7 +267,6 @@ int sys_lseek(int fd, off_t offset, int whence, off_t *retval){
     
     int result;
 
-    // kprintf("----lseek() entered with fd: %d and offset %lld\n", fd, (long long)offset);
 
     spinlock_acquire(&curproc->p_lock);
     struct file *this_file = curproc->fd_table[fd];
@@ -286,14 +274,12 @@ int sys_lseek(int fd, off_t offset, int whence, off_t *retval){
 
     if (this_file == NULL)
     {
-        kprintf("in lseek() bad fd given\n");
         return EBADF;
     }
 
     lock_acquire(this_file->lock);
 
     if (!VOP_ISSEEKABLE(this_file->vn)){
-        kprintf("lseek failed because not seekable\n");
         lock_release(this_file->lock);
         return ESPIPE;
     }
@@ -362,7 +348,6 @@ int dup2(int old_fd, int new_fd, int32_t *retval){
     struct file *old_file = curproc->fd_table[old_fd];
 
     if (old_file == NULL){
-        kprintf("in lseek() bad fd given\n");
         spinlock_release(&curproc->p_lock);
         return EBADF;
     }
@@ -374,11 +359,9 @@ int dup2(int old_fd, int new_fd, int32_t *retval){
     if (new_file != NULL){
     lock_acquire(new_file->lock);
     new_file->ref_count--;
-    // kprintf("In sys_dup2() closing old fd %d\n", old_fd);
     if (new_file->ref_count == 0)
     {
         
-        // kprintf("In sys_close() ref count is 0, destroying file %d\n", fd);
         struct vnode *vn = new_file->vn;
         
         lock_release(new_file->lock);
